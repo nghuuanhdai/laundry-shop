@@ -238,7 +238,7 @@ export default function Shop() {
 							<span className="sr-only">&lsaquo;</span>
 						</button>
 					</li>
-					<li className="page-item"><a className="page-link" href="#">{pageIndex+1}</a></li>
+					<li className="page-item"><a className="page-link" href="#">{pageIndex+1}/{(pageCount??0) + 1}</a></li>
 					<li className="page-item">
 						<button className="page-link" onClick={(evt)=>updatePageIndex(pageIndex+1)} aria-label="Next">
 							<span aria-hidden="true">&rsaquo;</span>
