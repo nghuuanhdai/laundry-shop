@@ -9,12 +9,24 @@ const fetcher = (url) =>
 export default function RequestRow({request, onEdit, onDelete}) {
   const {data: req, err} = useSWR(`/api/request/${request.id}`, fetcher)
 
+  function formatDateTime(isoString) {
+    if(!isoString) return 'Unknown'
+    const m = new Date(isoString)
+    const dateString =
+      m.getUTCFullYear() + "/" +
+      ("0" + (m.getUTCMonth()+1)).slice(-2) + "/" +
+      ("0" + m.getUTCDate()).slice(-2) + " " +
+      ("0" + m.getUTCHours()).slice(-2) + ":" +
+      ("0" + m.getUTCMinutes()).slice(-2)
+    return dateString
+  }
+
   return (
     <tr>
       <th scope="row">{request.index + 1}</th>
       <td>{request.id}</td>
-      <td>{req?.requestDate??'Unknown'}</td>
-      <td>{req?.dueDate??'Unknown'}</td>
+      <td>{formatDateTime(req?.requestDate)}</td>
+      <td>{formatDateTime(req?.dueDate)}</td>
       <td>{req?.status??'Unknown'}</td>
       <td>{req?.contact??'Unknown'}</td>
       <td>{req?.note??''}</td>
