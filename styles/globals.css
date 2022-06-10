@@ -74,6 +74,10 @@ h5 {
   -webkit-transform: rotate(45deg);
 }
 
+.none {
+  border-width: 0 0px 3px 0;
+}
+
 .divider {
   height: 1px;
   width: 100%;

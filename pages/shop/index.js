@@ -5,15 +5,11 @@ import NavBar from "../../components/navBar";
 
 import styles from "../../styles/Shop.module.css"
 import useSWR from 'swr'
+import { mutate, SWRConfig } from "swr";
 import RequestRow from "../../components/requestRow";
 import { useEffect } from "react";
 
-const fetcher = (url)=>{
-	console.log(url)
-	return {documents: [{id: 'effaf'},{id: 'afa'},{id: 'fqwe'},{id: 'fawef'},{id: 'afc'}], pageCount: 9}
-}
-
-const perPageCount = 5
+import { loginCheck } from "../../utils/firebaseAdmin";
 
 function SearchInput({searchId}) {
 	const [receiptId, setReceiptId] = useState('')
@@ -35,10 +31,11 @@ function SearchInput({searchId}) {
 }
 
 function RequestForm({id, clearId, createNew, updateRequest}) {
-	const fetcher = (url)=>{
-		return {id: "ef", requestDate: null, dueDate: null, status: 'waiting', contact: '09-xxxx-xxxx', note: 'deep clean'}
-	}
-	const {data: req, err} = useSWR(`/request/${id}`, fetcher)
+	const fetcher = (url) => 
+		fetch(url)
+			.then(res => res.json())
+			// .then(data => {console.log(data); return data;})
+	const {data: request, err} = useSWR(`/api/request/${id}`, fetcher)
 
 	function requestSubmit(evt) {
 		evt.preventDefault()
@@ -56,25 +53,30 @@ function RequestForm({id, clearId, createNew, updateRequest}) {
 			updateRequest(id, data)
 	}
 
-	function formatTime(date) {
-		var isoString = date.toISOString();
-		return isoString.substring(0, (isoString.indexOf("T")|0) + 6|0);
-	}
-	
 	useEffect(()=>{
+		function formatTime(date) {
+			var isoString = date.toISOString();
+			return formatTimeStr(isoString);
+		}
+	
+		function formatTimeStr(isoString) {
+			if(!isoString) return isoString
+			return isoString.substring(0, (isoString.indexOf("T")|0) + 6|0);
+		}
+
 		const statusSelectInput = document.getElementById('status')
 		const noteInput = document.getElementById('note')
 		const dueDateInput = document.getElementById('dueDate')
 		const requestDateInput = document.getElementById('requestDate')
 		const contactInput = document.getElementById('contact')
+		
+		statusSelectInput.value = request?.status??'waiting'
+		noteInput.value = request?.note??''
+		dueDateInput.value = formatTimeStr(request?.dueDate)??formatTime(new Date())
+		requestDateInput.value = request?.requestDate??formatTime(new Date())
+		contactInput.value = request?.contact??''
 
-		statusSelectInput.value = req?.status??''
-		noteInput.value = req?.note??''
-		dueDateInput.value = req?.dueDate??formatTime(new Date())
-		requestDateInput.value = req?.requestDate??formatTime(new Date())
-		contactInput.value = req?.contact
-
-	},[req])
+	},[request])
 
 	return (
 		<form onSubmit={requestSubmit} className={styles.request_form} id='request-form'>
@@ -108,13 +110,25 @@ function RequestForm({id, clearId, createNew, updateRequest}) {
 	)
 }
 
+function partialSWRInvalidate(partialKey) {
+	const keys = Array.from(SWRConfig.default.cache.keys())
+	keys.filter(key => key.startsWith(partialKey))
+		.forEach(key => mutate(key))
+}
+
 export default function Shop() {
+	const fetcher = (url)=>
+		fetch(url)
+			.then((res)=>res.json())
+			// .then(data => {console.log(data); return data})
+	const perPageCount = 5
+
 	const [receiptId, setReceiptId] = useState('')
-	const [requestSort, setRequestSort] = useState(-1)
-	const [dueSort, setDueSort] = useState(-1)
+	const [requestSort, setRequestSort] = useState(0)
+	const [dueSort, setDueSort] = useState(0)
 	const [pageIndex, setPageIndex] = useState(0)
 	const [selectedId, setSelectedId] = useState('')
-	const {data: swrData, reqErr} = useSWR(`/requests/${pageIndex}?id=${receiptId}&req=${requestSort}&due=${dueSort}&?pageCount=${perPageCount}`, fetcher) 
+	const {data: swrData, reqErr} = useSWR(`/api/requests/${pageIndex}?id=${receiptId}&req=${requestSort}&due=${dueSort}&page_count=${perPageCount}`, fetcher) 
 	
 	function clearSelectedId() {
 		setSelectedId('')
@@ -127,20 +141,62 @@ export default function Shop() {
 	}
 	const requests = (swrData?.documents??[]).map((req, index) => ({index: (index+pageIndex*perPageCount), ...req}))
 	function toggleRequestDatesort(evt) {
-		if (requestSort==1) setRequestSort(-1)
-		else setRequestSort(1)
+		let newSortMode = requestSort+1
+		if(newSortMode> 1)
+			newSortMode=-1
+		if(newSortMode< -1)
+			newSortMode=-1
+		setRequestSort(newSortMode)
 		setPageIndex(0)
 	}
 	function toggleDueDatesort(evt) {
-		if (dueSort==1) setDueSort(-1)
-		else setDueSort(1)
+		let newSortMode = dueSort+1
+		if(newSortMode> 1)
+			newSortMode=-1
+		if(newSortMode< -1)
+			newSortMode=-1
+		setDueSort(newSortMode)
 		setPageIndex(0)
 	}
-	function createNew(data) {
-		console.log(data)
+	const contentType = 'application/json'
+	async function createNew(data) {
+		const res = await fetch(`/api/request`, {
+			method: 'POST',
+			headers: {
+				Accept: contentType,
+				'Content-Type': contentType
+			},
+			body: JSON.stringify(data)
+		})
+		const json = await res.json()
+		partialSWRInvalidate('/api/requests')
+		setSelectedId(json._id)
 	}
-	function updateRequest(id, data) {
+	async function deleteRequest(id) {
+		const res = await fetch(`/api/request/${id}`, {
+			method: 'DELETE',
+			headers: {
+				Accept: contentType,
+				'Content-Type': contentType
+			}
+		})
+		const json = await res.json()
+		partialSWRInvalidate('/api/requests')
 		
+		if(id == selectedId)
+			clearSelectedId()
+	}
+	async function updateRequest(id, data) {
+		const res = await fetch(`/api/request/${id}`, {
+			method: 'PUT',
+			headers: {
+				Accept: contentType,
+				'Content-Type': contentType
+			},
+			body: JSON.stringify(data)
+		})
+		const json = await res.json()
+		mutate(`/api/request/${id}`, json, false)
 	}
 	return ( 
 	<div>
@@ -156,8 +212,8 @@ export default function Shop() {
 					<tr>
 					<th scope="col">#</th>
 					<th scope="col">Receipt Id</th>
-					<th scope="col"><button onClick={toggleRequestDatesort} className="btn">Request date<i className={(requestSort==1)?"arrow down":"arrow up"}></i></button></th>
-					<th scope="col"><button onClick={toggleDueDatesort} className="btn">Due date<i className={(dueSort==1)?"arrow down":"arrow up"}></i></button></th>
+					<th scope="col"><button onClick={toggleRequestDatesort} className="btn">Request date<i className={(requestSort==1)?"arrow down":(requestSort==-1)?"arrow up":"arrow none"}></i></button></th>
+					<th scope="col"><button onClick={toggleDueDatesort} className="btn">Due date<i className={(dueSort==1)?"arrow down":(dueSort==-1)?"arrow up":"arrow none"}></i></button></th>
 					<th scope="col">Status</th>
 					<th scope="col">Contact</th>
 					<th scope="col">Note</th>
@@ -166,7 +222,7 @@ export default function Shop() {
 					</tr>
 				</thead>
 					<tbody>
-						{requests.map(request => <RequestRow key={request.index} request={request} onEdit={setSelectedId}></RequestRow>)}
+						{requests.map(request => <RequestRow key={request.index} request={request} onEdit={setSelectedId} onDelete={deleteRequest}></RequestRow>)}
 					</tbody>
 				</table>
 		</div>
@@ -203,4 +259,17 @@ export default function Shop() {
 		<Footer></Footer>
 	</div>
 	);
+}
+
+export async function getServerSideProps(context) {
+	try {
+			await loginCheck(context.req, context.res)
+	} catch (error) {
+			context.res.writeHead(302, { Location: '/login' });
+			context.res.end();
+			return { props: {}}
+	}
+	return {
+		props: {id: context.req.decodedClaims.uid}, // will be passed to the page component as props
+	}
 }

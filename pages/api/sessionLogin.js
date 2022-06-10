@@ -11,7 +11,7 @@ export default async function handler(req, res) {
         return;
     }
 
-    const expiresIn = 60*60*24*5;
+    const expiresIn = 1000*60*60*24*5;
     const auth = getAuth(getAdminApp())
 
     try {
