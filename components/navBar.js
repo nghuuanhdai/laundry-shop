@@ -1,12 +1,14 @@
 import Link from "next/link"
 
-export default function NavBar() {
+export default function NavBar({fixed=true}) {
     return (
-        <nav className="navbar navbar-expand-lg navbar-light navbar-fixed-top">
+        <nav className={`navbar navbar-expand-lg navbar-light ${fixed?'navbar-fixed-top':''}`}>
           <div className="container">
-            <a className="navbar-brand fw-bold text-gunmetal" href="#">
-              easy laundry
-            </a>
+            <Link href='/'>
+              <a className="navbar-brand fw-bold text-gunmetal">
+                easy laundry
+              </a>
+            </Link>
             <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
               <span className="navbar-toggler-icon"></span>
             </button>
