@@ -10,7 +10,8 @@ const RequestSchema = new mongoose.Schema({
     default: 'waiting' 
   } ,
   contact: String,
-  note: String
+  note: String,
+  location: String
 })
 
 export default mongoose.models.Request || mongoose.model('Request', RequestSchema)

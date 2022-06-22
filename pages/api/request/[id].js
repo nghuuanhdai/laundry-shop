@@ -18,6 +18,7 @@ export default async function handler(req, res) {
     request.dueDate = new Date(req.body.dueDate + ":00.000Z")
     request.status = req.body.status
     request.contact = req.body.contact
+    request.location = req.body.location
     request.note = req.body.note
     const saveRs = await request.save()
     return res.status(200).send(saveRs)

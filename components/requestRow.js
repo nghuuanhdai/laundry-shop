@@ -28,6 +28,7 @@ export default function RequestRow({request, onEdit, onDelete}) {
       <td>{formatDateTime(req?.requestDate)}</td>
       <td>{formatDateTime(req?.dueDate)}</td>
       <td>{req?.status??'Unknown'}</td>
+      <td>{req?.location??'Unknown'}</td>
       <td>{req?.contact??'Unknown'}</td>
       <td>{req?.note??''}</td>
       <td><button className="btn btn-primary" onClick={(evt)=>onEdit(request.id)}>Edit</button></td>

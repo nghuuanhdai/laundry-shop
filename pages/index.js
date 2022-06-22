@@ -5,13 +5,13 @@ import styles from '../styles/Home.module.css'
 import NavBar from '../components/navBar'
 import HeroLayout from '../components/heroLayout'
 import Footer from '../components/footer'
+import QRScanBtn from '../components/qrScanBtn'
 
 export default function Home() {
   const [receiptId, setReceiptId] = useState('')
 
-  function scanQR(evt) {
-    evt.preventDefault()
-    setReceiptId('urllr')
+  function onQrDetected(qr) {
+    setReceiptId(qr)
   }
   return (
     <div className={styles.container}>
@@ -27,7 +27,7 @@ export default function Home() {
               <input type="text" className="form-control" placeholder="Receipt ID" aria-label="Recipient's username with two button addons" aria-describedby="button-addon4" value={receiptId} onChange={(evt)=>setReceiptId(evt.target.value)}></input>
               <div className="input-group-append" id="button-addon4">
                 <button className="btn btn-light" type="submit">Track</button>
-                <button className="btn btn-dark" type="button" onClick={scanQR}>Scan QR</button>
+                <QRScanBtn onQrDetected={onQrDetected}></QRScanBtn>
               </div>
             </form>
           </div>

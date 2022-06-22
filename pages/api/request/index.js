@@ -19,6 +19,7 @@ export default async function handler(req, res) {
       dueDate: new Date(req.body.dueDate + ":00.000Z"),
       status: req.body.status,
       contact: req.body.contact,
+      location: req.body.location,
       note: req.body.note
     })
     const savingRs = await newRequest.save()

@@ -10,21 +10,24 @@ import RequestRow from "../../components/requestRow";
 import { useEffect } from "react";
 
 import { loginCheck } from "../../utils/firebaseAdmin";
+import { QRdiv } from "../../components/qr";
+import QRScanBtn from "../../components/qrScanBtn";
+import PrintQRButton from "../../components/printQRBtn";
 
 function SearchInput({searchId}) {
 	const [receiptId, setReceiptId] = useState('')
 	function search(evt) {
 		searchId(receiptId)
 	}
-	function scanQR(evt) {
-		setReceiptId('ef')
+	function onQrDetected(qr) {
+		setReceiptId(qr)
 	}
 	return (
 		<div className="input-group mb-3">
 			<input type="text" className="form-control" placeholder="Receipt ID" aria-label="Recipient's username with two button addons" aria-describedby="button-addon4" value={receiptId} onChange={(evt)=>setReceiptId(evt.target.value)}></input>
 			<div className="input-group-append" id="button-addon4">
 				<button className="btn btn-light" type="button" onClick={search}>Search</button>
-				<button className="btn btn-dark" type="button" onClick={scanQR}>Scan QR</button>
+				<QRScanBtn onQrDetected={onQrDetected}></QRScanBtn>
 			</div>
 		</div>
 	)
@@ -44,6 +47,7 @@ function RequestForm({id, clearId, createNew, updateRequest}) {
 			requestDate: formData.get('requestDate'),
 			dueDate: formData.get('dueDate'),
 			status: formData.get('status'),
+			location: formData.get('location'),
 			contact: formData.get('contact'),
 			note: formData.get('note')
 		}
@@ -63,8 +67,8 @@ function RequestForm({id, clearId, createNew, updateRequest}) {
 			if(!isoString) return isoString
 			return isoString.substring(0, (isoString.indexOf("T")|0) + 6|0);
 		}
-
 		const statusSelectInput = document.getElementById('status')
+		const locationInput = document.getElementById('location')
 		const noteInput = document.getElementById('note')
 		const dueDateInput = document.getElementById('dueDate')
 		const requestDateInput = document.getElementById('requestDate')
@@ -75,6 +79,7 @@ function RequestForm({id, clearId, createNew, updateRequest}) {
 		dueDateInput.value = formatTimeStr(request?.dueDate)??formatTime(new Date())
 		requestDateInput.value = request?.requestDate??formatTime(new Date())
 		contactInput.value = request?.contact??''
+		locationInput.value = request?.location??''
 
 	},[request])
 
@@ -94,6 +99,10 @@ function RequestForm({id, clearId, createNew, updateRequest}) {
 					<option>done</option>
 				</select>
 			</div>
+			<div className='form-group'>
+				<label htmlFor="location">Location</label>
+				<input id="location" type="text" name="location" className="form-control"></input>
+			</div>
 			<div className="form-group">
 				<label htmlFor="contact">Contact</label>
 				<input className="form-control" id="contact" name='contact'></input>
@@ -102,9 +111,13 @@ function RequestForm({id, clearId, createNew, updateRequest}) {
 				<label htmlFor="note">Note</label>
 				<textarea className="form-control" id="note" rows="3" name='note'></textarea>
 			</div>
+			<div className='d-flex justify-content-center m-2' id="qr">
+				<QRdiv text={id}></QRdiv>
+			</div>
 			<div className={styles.button_group}>
 				<button type="submit" className="btn btn-primary">{id===''?'New':'Update'}</button>
 				<button type="button" className="btn btn-light" onClick={clearId}>Clear</button>
+				<PrintQRButton request={request}></PrintQRButton>
 			</div>
 		</form>
 	)
@@ -215,6 +228,7 @@ export default function Shop() {
 					<th scope="col"><button onClick={toggleRequestDatesort} className="btn">Request date<i className={(requestSort==1)?"arrow down":(requestSort==-1)?"arrow up":"arrow none"}></i></button></th>
 					<th scope="col"><button onClick={toggleDueDatesort} className="btn">Due date<i className={(dueSort==1)?"arrow down":(dueSort==-1)?"arrow up":"arrow none"}></i></button></th>
 					<th scope="col">Status</th>
+					<th scope="col">Location</th>	
 					<th scope="col">Contact</th>
 					<th scope="col">Note</th>
 					<th scope="col">Edit</th>

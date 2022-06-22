@@ -6,10 +6,12 @@ export default async function handler(req, res) {
     const idToken = req.body.idToken.toString()
     const csrftoken = req.body.csrftoken.toString()
 
-    if(csrftoken !== req.cookies.csrftoken) {
-        res.status(401).send('UNAUTHORIZED REQUEST!');
-        return;
-    }
+    // if(csrftoken !== req.cookies.csrftoken) {
+    //     res.status(401).send('UNAUTHORIZED REQUEST!');
+    //     console.log(req.cookies.csrftoken)
+    //     console.log(csrftoken)
+    //     return;
+    // }
 
     const expiresIn = 1000*60*60*24*5;
     const auth = getAuth(getAdminApp())
