@@ -45,7 +45,7 @@ export default function TrackingPage() {
           <dt className="col-sm-3">Due date</dt>
           <dd className="col-sm-9">{formatDateTime(req?.dueDate)}</dd>
 
-          <dt className="col-sm-3">Due date</dt>
+          <dt className="col-sm-3">Status</dt>
           <dd className="col-sm-9">{req?.status??'Unknown'}</dd>
 
           <dt className="col-sm-3">Contact</dt>
